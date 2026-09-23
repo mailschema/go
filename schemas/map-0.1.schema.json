@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mailschema.org/schemas/map-0.1.schema.json",
+  "title": "Mail Action Protocol 0.1",
+  "description": "Description, request, result and problem documents for the MAP 0.1 authenticated HTTPS profile.",
+  "oneOf": [
+    { "$ref": "#/$defs/description" },
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/result" },
+    { "$ref": "#/$defs/problem" }
+  ],
+  "$defs": {
+    "profile": {
+      "const": "https://mailschema.org/profiles/map/0.1"
+    },
+    "identifier": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048
+    },
+    "uuidUrn": {
+      "type": "string",
+      "pattern": "^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha-256:[a-f0-9]{64}$"
+    },
+    "recordDigest": {
+      "type": "string",
+      "pattern": "^sha-256:[a-f0-9]{64}$"
+    },
+    "typeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?(?:-[a-zA-Z0-9.-]+)?$",
+          "maxLength": 80
+        },
+        "recordDigest": { "$ref": "#/$defs/recordDigest" }
+      },
+      "required": ["id", "version", "recordDigest"]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "revision": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "digest": { "$ref": "#/$defs/digest" }
+      },
+      "required": ["id", "revision", "digest"]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 100
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "inputSchema": { "$ref": "#/$defs/identifier" }
+      },
+      "required": ["id", "name", "description", "inputSchema"]
+    },
+    "description": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "@context": {
+          "const": "https://mailschema.org/contexts/map-0.1.jsonld"
+        },
+        "@type": { "const": "MailAction" },
+        "@id": { "$ref": "#/$defs/uuidUrn" },
+        "profile": { "$ref": "#/$defs/profile" },
+        "type": { "$ref": "#/$defs/typeReference" },
+        "describedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "name": { "type": "string", "minLength": 1, "maxLength": 240 },
+            "execution": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": { "$ref": "#/$defs/identifier" },
+                "method": { "const": "POST" },
+                "requestMediaType": { "const": "application/json" },
+                "resultMediaType": { "const": "application/json" },
+                "resultUrlTemplate": {
+                  "type": "string",
+                  "format": "uri-template",
+                  "pattern": "^https://.*\\{requestId\\}.*$",
+                  "maxLength": 2048
+                },
+                "resultRetentionSeconds": {
+                  "type": "integer",
+                  "minimum": 300,
+                  "maximum": 31536000
+                }
+              },
+              "required": [
+                "url",
+                "method",
+                "requestMediaType",
+                "resultMediaType",
+                "resultUrlTemplate",
+                "resultRetentionSeconds"
+              ]
+            },
+            "humanUrl": { "$ref": "#/$defs/identifier" },
+            "authorization": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "service-configured" },
+                "schemes": {
+                  "type": "array",
+                  "items": { "enum": ["oauth2", "bearer", "session"] },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "audience": { "type": "string", "minLength": 1, "maxLength": 500 }
+              },
+              "required": ["kind", "schemes"]
+            }
+          },
+          "required": ["id", "name", "execution", "humanUrl", "authorization"]
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "operations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/operation" },
+          "minItems": 1,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "@context",
+        "@type",
+        "@id",
+        "profile",
+        "type",
+        "describedAt",
+        "expiresAt",
+        "service",
+        "target",
+        "operations"
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "MapRequest" },
+        "profile": { "$ref": "#/$defs/profile" },
+        "requestId": { "$ref": "#/$defs/uuidUrn" },
+        "interactionId": { "$ref": "#/$defs/uuidUrn" },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "type": { "$ref": "#/$defs/typeReference" },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 100
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "input": { "type": "object", "maxProperties": 100 }
+      },
+      "required": [
+        "kind",
+        "profile",
+        "requestId",
+        "interactionId",
+        "requestedAt",
+        "type",
+        "operation",
+        "target",
+        "input"
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "MapResult" },
+        "profile": { "$ref": "#/$defs/profile" },
+        "requestId": { "$ref": "#/$defs/uuidUrn" },
+        "interactionId": { "$ref": "#/$defs/uuidUrn" },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 100
+        },
+        "state": { "enum": ["accepted", "completed", "pending", "approval-required"] },
+        "target": { "$ref": "#/$defs/target" },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "resultUrl": { "$ref": "#/$defs/identifier" },
+        "output": { "type": "object", "maxProperties": 100 }
+      },
+      "required": [
+        "kind",
+        "profile",
+        "requestId",
+        "interactionId",
+        "operation",
+        "state",
+        "target",
+        "recordedAt",
+        "resultUrl",
+        "output"
+      ]
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "https://mailschema.org/problems/refused",
+            "https://mailschema.org/problems/stale-target",
+            "https://mailschema.org/problems/expired-interaction",
+            "https://mailschema.org/problems/invalid-request",
+            "https://mailschema.org/problems/unsupported-profile",
+            "https://mailschema.org/problems/unsupported-type",
+            "https://mailschema.org/problems/unsupported-operation",
+            "https://mailschema.org/problems/idempotency-conflict",
+            "https://mailschema.org/problems/request-in-progress"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+        "detail": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "instance": { "$ref": "#/$defs/identifier" },
+        "profile": { "$ref": "#/$defs/profile" },
+        "requestId": { "$ref": "#/$defs/uuidUrn" },
+        "interactionId": { "$ref": "#/$defs/uuidUrn" },
+        "code": {
+          "enum": [
+            "refused",
+            "stale-target",
+            "expired-interaction",
+            "invalid-request",
+            "unsupported-profile",
+            "unsupported-type",
+            "unsupported-operation",
+            "idempotency-conflict",
+            "request-in-progress"
+          ]
+        },
+        "target": { "$ref": "#/$defs/target" }
+      },
+      "required": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "instance",
+        "profile",
+        "requestId",
+        "interactionId",
+        "code"
+      ]
+    }
+  }
+}
