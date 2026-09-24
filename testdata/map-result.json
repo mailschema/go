@@ -1,0 +1,23 @@
+{
+  "kind": "MapResult",
+  "profile": "https://mailschema.org/profiles/map/0.1",
+  "requestId": "urn:uuid:018f47a2-b4d3-7c02-b491-7bdf2eaac67c",
+  "interactionId": "urn:uuid:018f47a2-5d7c-7b11-9a3d-4d2160b85b10",
+  "type": {
+    "id": "https://mailschema.org/types/content-review",
+    "version": "0.1",
+    "recordDigest": "sha-256:0e6365df1bf904f2475f972ec66a5561edc0bfaae69fd7a1b41f53b40bf8ac1c"
+  },
+  "operation": "approve",
+  "state": "completed",
+  "target": {
+    "id": "https://reviews.example/content/campaign-42",
+    "revision": "4",
+    "digest": "sha-256:9096ce5e9226696d3bdc80f7d62a8e1ca4995c4fd8c4b9f0155287529aefe8fd"
+  },
+  "recordedAt": "2026-09-23T01:06:01Z",
+  "resultUrl": "https://reviews.example/map/results/urn%3Auuid%3A018f47a2-b4d3-7c02-b491-7bdf2eaac67c",
+  "output": {
+    "decision": "approved"
+  }
+}

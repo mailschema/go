@@ -18,6 +18,12 @@
       "format": "uri",
       "maxLength": 2048
     },
+    "httpsIdentifier": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "maxLength": 2048
+    },
     "uuidUrn": {
       "type": "string",
       "pattern": "^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
@@ -93,7 +99,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "url": { "$ref": "#/$defs/identifier" },
+                "url": { "$ref": "#/$defs/httpsIdentifier" },
                 "method": { "const": "POST" },
                 "requestMediaType": { "const": "application/json" },
                 "resultMediaType": { "const": "application/json" },
@@ -118,7 +124,7 @@
                 "resultRetentionSeconds"
               ]
             },
-            "humanUrl": { "$ref": "#/$defs/identifier" },
+            "humanUrl": { "$ref": "#/$defs/httpsIdentifier" },
             "authorization": {
               "type": "object",
               "additionalProperties": false,
@@ -196,15 +202,18 @@
         "profile": { "$ref": "#/$defs/profile" },
         "requestId": { "$ref": "#/$defs/uuidUrn" },
         "interactionId": { "$ref": "#/$defs/uuidUrn" },
+        "type": { "$ref": "#/$defs/typeReference" },
         "operation": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
           "maxLength": 100
         },
-        "state": { "enum": ["accepted", "completed", "pending", "approval-required"] },
+        "state": {
+          "enum": ["accepted", "completed", "failed", "pending", "approval-required"]
+        },
         "target": { "$ref": "#/$defs/target" },
         "recordedAt": { "type": "string", "format": "date-time" },
-        "resultUrl": { "$ref": "#/$defs/identifier" },
+        "resultUrl": { "$ref": "#/$defs/httpsIdentifier" },
         "output": { "type": "object", "maxProperties": 100 }
       },
       "required": [
@@ -212,6 +221,7 @@
         "profile",
         "requestId",
         "interactionId",
+        "type",
         "operation",
         "state",
         "target",
@@ -227,6 +237,8 @@
         "type": {
           "enum": [
             "https://mailschema.org/problems/refused",
+            "https://mailschema.org/problems/authentication-required",
+            "https://mailschema.org/problems/result-not-found",
             "https://mailschema.org/problems/stale-target",
             "https://mailschema.org/problems/expired-interaction",
             "https://mailschema.org/problems/invalid-request",
@@ -247,6 +259,8 @@
         "code": {
           "enum": [
             "refused",
+            "authentication-required",
+            "result-not-found",
             "stale-target",
             "expired-interaction",
             "invalid-request",
@@ -269,6 +283,52 @@
         "requestId",
         "interactionId",
         "code"
+      ],
+      "allOf": [
+        {
+          "if": { "properties": { "code": { "const": "invalid-request" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/invalid-request" }, "status": { "const": 400 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "authentication-required" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/authentication-required" }, "status": { "const": 401 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "refused" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/refused" }, "status": { "const": 403 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "result-not-found" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/result-not-found" }, "status": { "const": 404 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "stale-target" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/stale-target" }, "status": { "const": 409 } }, "required": ["target"] }
+        },
+        {
+          "if": { "properties": { "code": { "const": "idempotency-conflict" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/idempotency-conflict" }, "status": { "const": 409 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "request-in-progress" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/request-in-progress" }, "status": { "const": 409 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "expired-interaction" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/expired-interaction" }, "status": { "const": 410 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "unsupported-profile" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-profile" }, "status": { "const": 422 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "unsupported-type" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-type" }, "status": { "const": 422 } } }
+        },
+        {
+          "if": { "properties": { "code": { "const": "unsupported-operation" } }, "required": ["code"] },
+          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-operation" }, "status": { "const": 422 } } }
+        }
       ]
     }
   }

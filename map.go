@@ -94,6 +94,7 @@ type Result struct {
 	Profile       string         `json:"profile"`
 	RequestID     string         `json:"requestId"`
 	InteractionID string         `json:"interactionId"`
+	Type          TypeReference  `json:"type"`
 	Operation     string         `json:"operation"`
 	State         string         `json:"state"`
 	Target        Target         `json:"target"`
@@ -197,6 +198,59 @@ func ValidateRequest(value Request) error {
 	}
 	if value.Operation == "" || value.Input == nil {
 		return fmt.Errorf("mailschema: operation and input are required")
+	}
+	return nil
+}
+
+// ValidateResult checks a MAP 0.1 result's fixed identifiers and references.
+// Type-specific output constraints remain in the type schema.
+func ValidateResult(value Result) error {
+	if value.Kind != "MapResult" || value.Profile != Profile01 || !uuidURN.MatchString(value.RequestID) || !uuidURN.MatchString(value.InteractionID) {
+		return fmt.Errorf("mailschema: unsupported or invalid MAP result identity")
+	}
+	if err := validateType(value.Type); err != nil {
+		return fmt.Errorf("mailschema: %w", err)
+	}
+	if err := validateTarget(value.Target); err != nil {
+		return fmt.Errorf("mailschema: %w", err)
+	}
+	states := map[string]bool{
+		"accepted": true, "completed": true, "failed": true, "pending": true, "approval-required": true,
+	}
+	if value.Operation == "" || !states[value.State] || value.RecordedAt.IsZero() || !validHTTPS(value.ResultURL) || value.Output == nil {
+		return fmt.Errorf("mailschema: invalid MAP result state or fields")
+	}
+	return nil
+}
+
+// ValidateProblem checks a MAP 0.1 problem's fixed identifiers and the
+// required relationship between its code, type URI and HTTP status.
+func ValidateProblem(value Problem) error {
+	if value.Profile != Profile01 || !uuidURN.MatchString(value.RequestID) || !uuidURN.MatchString(value.InteractionID) || strings.TrimSpace(value.Title) == "" || strings.TrimSpace(value.Detail) == "" {
+		return fmt.Errorf("mailschema: unsupported or invalid MAP problem identity")
+	}
+	expected := map[string]struct {
+		typeURI string
+		status  int
+	}{
+		"invalid-request":         {"https://mailschema.org/problems/invalid-request", 400},
+		"authentication-required": {"https://mailschema.org/problems/authentication-required", 401},
+		"refused":                 {"https://mailschema.org/problems/refused", 403},
+		"result-not-found":        {"https://mailschema.org/problems/result-not-found", 404},
+		"stale-target":            {"https://mailschema.org/problems/stale-target", 409},
+		"idempotency-conflict":    {"https://mailschema.org/problems/idempotency-conflict", 409},
+		"request-in-progress":     {"https://mailschema.org/problems/request-in-progress", 409},
+		"expired-interaction":     {"https://mailschema.org/problems/expired-interaction", 410},
+		"unsupported-profile":     {"https://mailschema.org/problems/unsupported-profile", 422},
+		"unsupported-type":        {"https://mailschema.org/problems/unsupported-type", 422},
+		"unsupported-operation":   {"https://mailschema.org/problems/unsupported-operation", 422},
+	}
+	relation, ok := expected[value.Code]
+	if !ok || value.Type != relation.typeURI || value.Status != relation.status {
+		return fmt.Errorf("mailschema: contradictory MAP problem code, type or status")
+	}
+	if value.Code == "stale-target" && value.Target == nil {
+		return fmt.Errorf("mailschema: stale-target problem requires a target")
 	}
 	return nil
 }
