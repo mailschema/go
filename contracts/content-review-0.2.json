@@ -1,0 +1,91 @@
+{
+  "kind": "MapTypeContract",
+  "id": "https://mailschema.org/types/content-review",
+  "version": "0.2",
+  "profile": "https://mailschema.org/profiles/map/0.1",
+  "target": "Service-owned content at the exact revision and digest named in the request.",
+  "requestSchema": {
+    "url": "https://mailschema.org/schemas/content-review-0.2.schema.json",
+    "canonicalDigest": "sha-256:43a01e620e0730e47755694bdf5d086f8d0a1d3d8328fb0c7d2a4b70c6e62e25"
+  },
+  "operations": [
+    {
+      "id": "request-changes",
+      "effect": "Record review feedback on the named revision.",
+      "results": [
+        {
+          "state": "accepted",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "feedbackRecorded": {
+                "const": true
+              }
+            },
+            "required": [
+              "feedbackRecorded"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "approve",
+      "effect": "Record approval of the named revision, or record why a proposed approval ended without approval.",
+      "results": [
+        {
+          "state": "approval-required",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "approvalUrl": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              }
+            },
+            "required": [
+              "approvalUrl"
+            ]
+          }
+        },
+        {
+          "state": "completed",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "decision": {
+                "const": "approved"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          }
+        },
+        {
+          "state": "failed",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "reason": {
+                "enum": [
+                  "declined",
+                  "stale-target",
+                  "expired"
+                ]
+              }
+            },
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

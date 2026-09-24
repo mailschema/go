@@ -12,18 +12,23 @@ const (
 	ContributionSchema    SchemaName = "contribution"
 	MAP01Schema           SchemaName = "map-0.1"
 	ContentReview01Schema SchemaName = "content-review-0.1"
+	ContentReview02Schema SchemaName = "content-review-0.2"
 )
 
 //go:embed schemas/*.json
 var schemaFiles embed.FS
 
 //go:embed contracts/content-review-0.1.json
-var contentReviewContract []byte
+var contentReview01Contract []byte
+
+//go:embed contracts/content-review-0.2.json
+var contentReview02Contract []byte
 
 var schemaPaths = map[SchemaName]string{
 	ContributionSchema:    "schemas/contribution.schema.json",
 	MAP01Schema:           "schemas/map-0.1.schema.json",
 	ContentReview01Schema: "schemas/content-review-0.1.schema.json",
+	ContentReview02Schema: "schemas/content-review-0.2.schema.json",
 }
 
 // Schema returns an independent copy of a bundled JSON Schema document.
@@ -41,5 +46,10 @@ func Schema(name SchemaName) ([]byte, error) {
 
 // ContentReview01Contract returns an independent copy of the canonical type contract.
 func ContentReview01Contract() []byte {
-	return append([]byte(nil), contentReviewContract...)
+	return append([]byte(nil), contentReview01Contract...)
+}
+
+// ContentReview02Contract returns an independent copy of the current canonical type contract.
+func ContentReview02Contract() []byte {
+	return append([]byte(nil), contentReview02Contract...)
 }

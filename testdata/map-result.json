@@ -5,8 +5,8 @@
   "interactionId": "urn:uuid:018f47a2-5d7c-7b11-9a3d-4d2160b85b10",
   "type": {
     "id": "https://mailschema.org/types/content-review",
-    "version": "0.1",
-    "contractDigest": "sha-256:deba8fc588c83c7cdf9d4e47d23b114861aea35c3daaf71854dc6c626c8a1d05"
+    "version": "0.2",
+    "contractDigest": "sha-256:6ee5b086138799f70f2489e851e1db6e11ff91cd1141bd36fe202a47d8c1e637"
   },
   "operation": "approve",
   "state": "completed",

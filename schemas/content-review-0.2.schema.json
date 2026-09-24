@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mailschema.org/schemas/content-review-0.2.schema.json",
+  "title": "Content Review 0.2 MAP request binding",
+  "allOf": [
+    { "$ref": "https://mailschema.org/schemas/map-0.1.schema.json#/$defs/request" },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "object",
+          "properties": {
+            "id": { "const": "https://mailschema.org/types/content-review" },
+            "version": { "const": "0.2" }
+          }
+        }
+      }
+    },
+    {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "request-changes" },
+            "input": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "feedback": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 12000,
+                  "pattern": "\\S"
+                }
+              },
+              "required": ["feedback"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "approve" },
+            "input": {
+              "type": "object",
+              "additionalProperties": false,
+              "maxProperties": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
