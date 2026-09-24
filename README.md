@@ -10,7 +10,7 @@ Decode typed Mail Action Protocol documents and use the canonical MailSchema JSO
 ## Install
 
 ```sh
-go get github.com/mailschema/go@v0.1.0
+go get github.com/mailschema/go@v0.1.1
 ```
 
 ## Decode and check a request
@@ -46,9 +46,9 @@ if err != nil {
 }
 ```
 
-`MAP01Schema`, `ContentReview01Schema` and `ContributionSchema` expose independent copies of the bundled Draft 2020-12 schemas. Use them with a Draft 2020-12 validator when complete schema validation is required.
+`MAP01Schema`, `ContentReview01Schema`, `ContentReview02Schema` and `ContributionSchema` expose independent copies of the bundled Draft 2020-12 schemas. Use them with a Draft 2020-12 validator when complete schema validation is required.
 
-`ContentReview01Contract()` returns the canonical type contract used by MAP wire messages.
+`ContentReview01Contract()` and `ContentReview02Contract()` return immutable canonical type contracts. New integrations should use Content Review 0.2.
 
 ## Trust boundary
 
