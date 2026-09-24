@@ -1,0 +1,58 @@
+{
+  "kind": "MapTypeContract",
+  "id": "https://mailschema.org/types/content-review",
+  "version": "0.1",
+  "profile": "https://mailschema.org/profiles/map/0.1",
+  "target": "Service-owned content at the exact revision and digest named in the request.",
+  "requestSchema": {
+    "url": "https://mailschema.org/schemas/content-review-0.1.schema.json",
+    "canonicalDigest": "sha-256:cdad1149ab193d1bf71cb9463e3c4b7331ed56b0123e225adf68f70a2022b29d"
+  },
+  "operations": [
+    {
+      "id": "request-changes",
+      "effect": "Record review feedback on the named revision.",
+      "results": [
+        {
+          "state": "accepted",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "feedbackRecorded": { "const": true }
+            },
+            "required": ["feedbackRecorded"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "approve",
+      "effect": "Record approval of the named revision.",
+      "results": [
+        {
+          "state": "approval-required",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "approvalUrl": { "type": "string", "format": "uri", "pattern": "^https://" }
+            },
+            "required": ["approvalUrl"]
+          }
+        },
+        {
+          "state": "completed",
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "decision": { "const": "approved" }
+            },
+            "required": ["decision"]
+          }
+        }
+      ]
+    }
+  ]
+}

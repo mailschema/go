@@ -22,9 +22,9 @@ var (
 )
 
 type TypeReference struct {
-	ID           string `json:"id"`
-	Version      string `json:"version"`
-	RecordDigest string `json:"recordDigest"`
+	ID             string `json:"id"`
+	Version        string `json:"version"`
+	ContractDigest string `json:"contractDigest"`
 }
 
 type Target struct {
@@ -82,7 +82,6 @@ type Request struct {
 	Profile       string         `json:"profile"`
 	RequestID     string         `json:"requestId"`
 	InteractionID string         `json:"interactionId"`
-	RequestedAt   time.Time      `json:"requestedAt"`
 	Type          TypeReference  `json:"type"`
 	Operation     string         `json:"operation"`
 	Target        Target         `json:"target"`
@@ -108,11 +107,11 @@ type Problem struct {
 	Title         string  `json:"title"`
 	Status        int     `json:"status"`
 	Detail        string  `json:"detail"`
-	Instance      string  `json:"instance"`
-	Profile       string  `json:"profile"`
-	RequestID     string  `json:"requestId"`
-	InteractionID string  `json:"interactionId"`
-	Code          string  `json:"code"`
+	Instance      string  `json:"instance,omitempty"`
+	Profile       string  `json:"profile,omitempty"`
+	RequestID     string  `json:"requestId,omitempty"`
+	InteractionID string  `json:"interactionId,omitempty"`
+	Code          string  `json:"code,omitempty"`
 	Target        *Target `json:"target,omitempty"`
 }
 
@@ -137,7 +136,7 @@ func validHTTPS(value string) bool {
 }
 
 func validateType(value TypeReference) error {
-	if !validHTTPS(value.ID) || value.Version == "" || !digest.MatchString(value.RecordDigest) {
+	if !validHTTPS(value.ID) || value.Version == "" || !digest.MatchString(value.ContractDigest) {
 		return fmt.Errorf("invalid type reference")
 	}
 	return nil
@@ -226,8 +225,23 @@ func ValidateResult(value Result) error {
 // ValidateProblem checks a MAP 0.1 problem's fixed identifiers and the
 // required relationship between its code, type URI and HTTP status.
 func ValidateProblem(value Problem) error {
-	if value.Profile != Profile01 || !uuidURN.MatchString(value.RequestID) || !uuidURN.MatchString(value.InteractionID) || strings.TrimSpace(value.Title) == "" || strings.TrimSpace(value.Detail) == "" {
+	if strings.TrimSpace(value.Type) == "" || strings.TrimSpace(value.Title) == "" || strings.TrimSpace(value.Detail) == "" || value.Status < 400 || value.Status > 599 {
 		return fmt.Errorf("mailschema: unsupported or invalid MAP problem identity")
+	}
+	if value.Code == "" {
+		if value.Instance != "" || value.Profile != "" || value.RequestID != "" || value.InteractionID != "" || value.Target != nil {
+			return fmt.Errorf("mailschema: incomplete MAP problem correlation")
+		}
+		return nil
+	}
+	if value.Profile != Profile01 || !validHTTPS(value.Instance) || !uuidURN.MatchString(value.RequestID) {
+		return fmt.Errorf("mailschema: unsupported or invalid MAP problem correlation")
+	}
+	if value.Code != "result-not-found" && !uuidURN.MatchString(value.InteractionID) {
+		return fmt.Errorf("mailschema: MAP problem requires an interaction identifier")
+	}
+	if value.InteractionID != "" && !uuidURN.MatchString(value.InteractionID) {
+		return fmt.Errorf("mailschema: invalid MAP problem interaction identifier")
 	}
 	expected := map[string]struct {
 		typeURI string

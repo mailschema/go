@@ -21,6 +21,13 @@ func TestBundledSchemas(t *testing.T) {
 			t.Fatalf("%s: unexpected dialect", name)
 		}
 	}
+	var contract map[string]any
+	if err := json.Unmarshal(ContentReview01Contract(), &contract); err != nil {
+		t.Fatal(err)
+	}
+	if contract["id"] != ContentReviewType {
+		t.Fatalf("contract id = %q", contract["id"])
+	}
 }
 
 func TestResultCarriesExactTypeReference(t *testing.T) {
@@ -69,8 +76,7 @@ func TestStrictDecodeAndValidation(t *testing.T) {
 		"profile":"https://mailschema.org/profiles/map/0.1",
 		"requestId":"urn:uuid:018f47a2-b4d3-7c02-b491-7bdf2eaac67c",
 		"interactionId":"urn:uuid:018f47a2-5d7c-7b11-9a3d-4d2160b85b10",
-		"requestedAt":"2026-09-23T01:06:00Z",
-		"type":{"id":"https://mailschema.org/types/content-review","version":"0.1","recordDigest":"sha-256:0e6365df1bf904f2475f972ec66a5561edc0bfaae69fd7a1b41f53b40bf8ac1c"},
+		"type":{"id":"https://mailschema.org/types/content-review","version":"0.1","contractDigest":"sha-256:deba8fc588c83c7cdf9d4e47d23b114861aea35c3daaf71854dc6c626c8a1d05"},
 		"operation":"approve",
 		"target":{"id":"https://reviews.example/content/campaign-42","revision":"4","digest":"sha-256:9096ce5e9226696d3bdc80f7d62a8e1ca4995c4fd8c4b9f0155287529aefe8fd"},
 		"input":{}
@@ -86,5 +92,21 @@ func TestStrictDecodeAndValidation(t *testing.T) {
 	_, err = Decode[Request](strings.NewReader(strings.Replace(request, `"input":{}`, `"input":{},"token":"secret"`, 1)))
 	if err == nil {
 		t.Fatal("unknown credential field was accepted")
+	}
+}
+
+func TestResultNotFoundDoesNotInventInteraction(t *testing.T) {
+	problem := Problem{
+		Type:      "https://mailschema.org/problems/result-not-found",
+		Title:     "Result not found",
+		Status:    404,
+		Detail:    "No retained result exists for this request identifier.",
+		Instance:  "https://reviews.example/map/results/urn%3Auuid%3A018f47a2-b4d3-7c02-b491-7bdf2eaac699",
+		Profile:   Profile01,
+		RequestID: "urn:uuid:018f47a2-b4d3-7c02-b491-7bdf2eaac699",
+		Code:      "result-not-found",
+	}
+	if err := ValidateProblem(problem); err != nil {
+		t.Fatal(err)
 	}
 }

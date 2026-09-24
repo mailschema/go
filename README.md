@@ -48,6 +48,8 @@ if err != nil {
 
 `MAP01Schema`, `ContentReview01Schema` and `ContributionSchema` expose independent copies of the bundled Draft 2020-12 schemas. Use them with a Draft 2020-12 validator when complete schema validation is required.
 
+`ContentReview01Contract()` returns the canonical type contract used by MAP wire messages.
+
 ## Trust boundary
 
 A valid document is structured input. Decoding and validation do not authenticate a service, grant authority, approve an action or establish product conformance. Implementations must apply their own endpoint trust, credentials, permissions and policy before executing a request.
