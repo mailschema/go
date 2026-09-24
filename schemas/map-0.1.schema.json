@@ -32,7 +32,7 @@
       "type": "string",
       "pattern": "^sha-256:[a-f0-9]{64}$"
     },
-    "recordDigest": {
+    "contractDigest": {
       "type": "string",
       "pattern": "^sha-256:[a-f0-9]{64}$"
     },
@@ -46,9 +46,9 @@
           "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?(?:-[a-zA-Z0-9.-]+)?$",
           "maxLength": 80
         },
-        "recordDigest": { "$ref": "#/$defs/recordDigest" }
+        "contractDigest": { "$ref": "#/$defs/contractDigest" }
       },
-      "required": ["id", "version", "recordDigest"]
+      "required": ["id", "version", "contractDigest"]
     },
     "target": {
       "type": "object",
@@ -172,7 +172,6 @@
         "profile": { "$ref": "#/$defs/profile" },
         "requestId": { "$ref": "#/$defs/uuidUrn" },
         "interactionId": { "$ref": "#/$defs/uuidUrn" },
-        "requestedAt": { "type": "string", "format": "date-time" },
         "type": { "$ref": "#/$defs/typeReference" },
         "operation": {
           "type": "string",
@@ -187,7 +186,6 @@
         "profile",
         "requestId",
         "interactionId",
-        "requestedAt",
         "type",
         "operation",
         "target",
@@ -273,61 +271,139 @@
         },
         "target": { "$ref": "#/$defs/target" }
       },
-      "required": [
-        "type",
-        "title",
-        "status",
-        "detail",
-        "instance",
-        "profile",
-        "requestId",
-        "interactionId",
-        "code"
-      ],
+      "required": ["type", "title", "status", "detail"],
+      "dependentRequired": {
+        "instance": ["profile", "requestId", "code"],
+        "profile": ["instance", "requestId", "code"],
+        "requestId": ["instance", "profile", "code"],
+        "interactionId": ["instance", "profile", "requestId", "code"],
+        "code": ["instance", "profile", "requestId"]
+      },
       "allOf": [
         {
-          "if": { "properties": { "code": { "const": "invalid-request" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/invalid-request" }, "status": { "const": 400 } } }
+          "if": {
+            "properties": { "code": { "not": { "const": "result-not-found" } } },
+            "required": ["code"]
+          },
+          "then": { "required": ["interactionId"] }
         },
         {
-          "if": { "properties": { "code": { "const": "authentication-required" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/authentication-required" }, "status": { "const": 401 } } }
+          "if": { "properties": { "code": { "const": "invalid-request" } }, "required": ["code"] },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/invalid-request" },
+              "status": { "const": 400 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "code": { "const": "authentication-required" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/authentication-required" },
+              "status": { "const": 401 }
+            }
+          }
         },
         {
           "if": { "properties": { "code": { "const": "refused" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/refused" }, "status": { "const": 403 } } }
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/refused" },
+              "status": { "const": 403 }
+            }
+          }
         },
         {
           "if": { "properties": { "code": { "const": "result-not-found" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/result-not-found" }, "status": { "const": 404 } } }
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/result-not-found" },
+              "status": { "const": 404 }
+            }
+          }
         },
         {
           "if": { "properties": { "code": { "const": "stale-target" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/stale-target" }, "status": { "const": 409 } }, "required": ["target"] }
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/stale-target" },
+              "status": { "const": 409 }
+            },
+            "required": ["target"]
+          }
         },
         {
-          "if": { "properties": { "code": { "const": "idempotency-conflict" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/idempotency-conflict" }, "status": { "const": 409 } } }
+          "if": {
+            "properties": { "code": { "const": "idempotency-conflict" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/idempotency-conflict" },
+              "status": { "const": 409 }
+            }
+          }
         },
         {
-          "if": { "properties": { "code": { "const": "request-in-progress" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/request-in-progress" }, "status": { "const": 409 } } }
+          "if": {
+            "properties": { "code": { "const": "request-in-progress" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/request-in-progress" },
+              "status": { "const": 409 }
+            }
+          }
         },
         {
-          "if": { "properties": { "code": { "const": "expired-interaction" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/expired-interaction" }, "status": { "const": 410 } } }
+          "if": {
+            "properties": { "code": { "const": "expired-interaction" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/expired-interaction" },
+              "status": { "const": 410 }
+            }
+          }
         },
         {
-          "if": { "properties": { "code": { "const": "unsupported-profile" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-profile" }, "status": { "const": 422 } } }
+          "if": {
+            "properties": { "code": { "const": "unsupported-profile" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/unsupported-profile" },
+              "status": { "const": 422 }
+            }
+          }
         },
         {
           "if": { "properties": { "code": { "const": "unsupported-type" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-type" }, "status": { "const": 422 } } }
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/unsupported-type" },
+              "status": { "const": 422 }
+            }
+          }
         },
         {
-          "if": { "properties": { "code": { "const": "unsupported-operation" } }, "required": ["code"] },
-          "then": { "properties": { "type": { "const": "https://mailschema.org/problems/unsupported-operation" }, "status": { "const": 422 } } }
+          "if": {
+            "properties": { "code": { "const": "unsupported-operation" } },
+            "required": ["code"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "https://mailschema.org/problems/unsupported-operation" },
+              "status": { "const": 422 }
+            }
+          }
         }
       ]
     }

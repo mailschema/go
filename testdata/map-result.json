@@ -6,7 +6,7 @@
   "type": {
     "id": "https://mailschema.org/types/content-review",
     "version": "0.1",
-    "recordDigest": "sha-256:0e6365df1bf904f2475f972ec66a5561edc0bfaae69fd7a1b41f53b40bf8ac1c"
+    "contractDigest": "sha-256:deba8fc588c83c7cdf9d4e47d23b114861aea35c3daaf71854dc6c626c8a1d05"
   },
   "operation": "approve",
   "state": "completed",

@@ -17,6 +17,9 @@ const (
 //go:embed schemas/*.json
 var schemaFiles embed.FS
 
+//go:embed contracts/content-review-0.1.json
+var contentReviewContract []byte
+
 var schemaPaths = map[SchemaName]string{
 	ContributionSchema:    "schemas/contribution.schema.json",
 	MAP01Schema:           "schemas/map-0.1.schema.json",
@@ -34,4 +37,9 @@ func Schema(name SchemaName) ([]byte, error) {
 		return nil, fmt.Errorf("mailschema: read %s: %w", name, err)
 	}
 	return append([]byte(nil), contents...), nil
+}
+
+// ContentReview01Contract returns an independent copy of the canonical type contract.
+func ContentReview01Contract() []byte {
+	return append([]byte(nil), contentReviewContract...)
 }

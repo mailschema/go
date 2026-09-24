@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mailschema.org/schemas/content-review-0.1.schema.json",
-  "title": "Content Review 0.1 MAP request",
+  "title": "Content Review 0.1 MAP request binding",
   "allOf": [
     { "$ref": "https://mailschema.org/schemas/map-0.1.schema.json#/$defs/request" },
     {
@@ -11,10 +11,7 @@
           "type": "object",
           "properties": {
             "id": { "const": "https://mailschema.org/types/content-review" },
-            "version": { "const": "0.1" },
-            "recordDigest": {
-              "const": "sha-256:0e6365df1bf904f2475f972ec66a5561edc0bfaae69fd7a1b41f53b40bf8ac1c"
-            }
+            "version": { "const": "0.1" }
           }
         }
       }
