@@ -2,6 +2,7 @@ package mailschema
 
 import (
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 )
@@ -19,6 +20,46 @@ func TestBundledSchemas(t *testing.T) {
 		if document["$schema"] != "https://json-schema.org/draft/2020-12/schema" {
 			t.Fatalf("%s: unexpected dialect", name)
 		}
+	}
+}
+
+func TestResultCarriesExactTypeReference(t *testing.T) {
+	fixture, err := os.Open("testdata/map-result.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fixture.Close()
+
+	result, err := Decode[Result](fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidateResult(result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Type.ID != ContentReviewType {
+		t.Fatalf("result type = %q", result.Type.ID)
+	}
+}
+
+func TestProblemCorrelation(t *testing.T) {
+	problem := Problem{
+		Type:          "https://mailschema.org/problems/authentication-required",
+		Title:         "Authentication required",
+		Status:        401,
+		Detail:        "Authenticate before executing this action.",
+		Instance:      "https://reviews.example/map/results/018f47a2-b4d3-7c02-b491-7bdf2eaac67c",
+		Profile:       Profile01,
+		RequestID:     "urn:uuid:018f47a2-b4d3-7c02-b491-7bdf2eaac67c",
+		InteractionID: "urn:uuid:018f47a2-5d7c-7b11-9a3d-4d2160b85b10",
+		Code:          "authentication-required",
+	}
+	if err := ValidateProblem(problem); err != nil {
+		t.Fatal(err)
+	}
+	problem.Status = 403
+	if err := ValidateProblem(problem); err == nil {
+		t.Fatal("contradictory problem status was accepted")
 	}
 }
 
