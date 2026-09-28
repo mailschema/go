@@ -1,6 +1,6 @@
 # Release provenance
 
-Version `0.1.2` derives from [`mailschema/mailschema@61a12c9`](https://github.com/mailschema/mailschema/commit/61a12c97663061b46707f8d996bd1f59cae9a544), in [pull request #22](https://github.com/mailschema/mailschema/pull/22).
+Version `0.2.0` derives from [`mailschema/mailschema@932696a`](https://github.com/mailschema/mailschema/commit/932696a2ce5293872dc790a8e2b9c9cc4b314f2e).
 
 The bundled files are exact projections of that source commit and do not independently define MAP:
 
