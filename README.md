@@ -10,7 +10,7 @@ The Mail Action Protocol 0.2 core artifacts and the MailSchema Registry contribu
 ## Install
 
 ```sh
-go get github.com/mailschema/go@v0.1.2
+go get github.com/mailschema/go@v0.2.0
 ```
 
 ## Use an artifact
